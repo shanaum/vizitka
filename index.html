@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Автоматизация для вашего бизнеса</title>
+<meta name="description" content="Боты и автоматизация для бизнеса: запись клиентов, ответы 24/7, обработка заявок. Снимаю с вас рутину. Первый разбор бесплатно.">
+<meta name="theme-color" content="#101720">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Автоматизация для вашего бизнеса">
+<meta property="og:description" content="Боты и автоматизация: запись клиентов, ответы 24/7, обработка заявок. Первый разбор — бесплатно.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E%E2%9A%99%EF%B8%8F%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+<style>
+  :root{
+    /* light (default) */
+    --bg:#EDF0F3;
+    --card:#FFFFFF;
+    --ink:#131A22;
+    --ink-2:#37424F;
+    --steel:#5B6774;
+    --line:#DBE1E8;
+    --signal:#DC8600;
+    --signal-strong:#B86E00;
+    --signal-ink:#1B1204;
+    --signal-soft:rgba(220,134,0,0.12);
+    --success:#1E9E6A;
+    --mono-dim:#7C8794;
+    --panel:#101720;      /* the terminal panel stays dark in both themes on purpose */
+    --panel-ink:#E7ECF1;
+    --panel-line:#243040;
+    --panel-dim:#6C7A8A;
+    --shadow:0 1px 2px rgba(20,30,45,.06), 0 12px 32px -12px rgba(20,30,45,.18);
+    --font-sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --wrap:1080px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0C121A;
+      --card:#141C25;
+      --ink:#E9EEF3;
+      --ink-2:#C3CDD7;
+      --steel:#8A97A5;
+      --line:#222D38;
+      --signal:#FFB53D;
+      --signal-strong:#FFC868;
+      --signal-ink:#1B1204;
+      --signal-soft:rgba(255,181,61,0.14);
+      --success:#38C892;
+      --mono-dim:#6B7887;
+      --panel:#0A0F16;
+      --panel-ink:#E7ECF1;
+      --panel-line:#1E2833;
+      --panel-dim:#5E6C7B;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 18px 40px -16px rgba(0,0,0,.6);
+    }
+  }
+  /* explicit toggle wins over the media query in both directions */
+  :root[data-theme="light"]{
+    --bg:#EDF0F3;--card:#FFFFFF;--ink:#131A22;--ink-2:#37424F;--steel:#5B6774;
+    --line:#DBE1E8;--signal:#DC8600;--signal-strong:#B86E00;--signal-ink:#1B1204;
+    --signal-soft:rgba(220,134,0,0.12);--success:#1E9E6A;--mono-dim:#7C8794;
+    --panel:#101720;--panel-ink:#E7ECF1;--panel-line:#243040;--panel-dim:#6C7A8A;
+    --shadow:0 1px 2px rgba(20,30,45,.06), 0 12px 32px -12px rgba(20,30,45,.18);
+  }
+  :root[data-theme="dark"]{
+    --bg:#0C121A;--card:#141C25;--ink:#E9EEF3;--ink-2:#C3CDD7;--steel:#8A97A5;
+    --line:#222D38;--signal:#FFB53D;--signal-strong:#FFC868;--signal-ink:#1B1204;
+    --signal-soft:rgba(255,181,61,0.14);--success:#38C892;--mono-dim:#6B7887;
+    --panel:#0A0F16;--panel-ink:#E7ECF1;--panel-line:#1E2833;--panel-dim:#5E6C7B;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 18px 40px -16px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0}
+  .page{
+    background:var(--bg);color:var(--ink);
+    font-family:var(--font-sans);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    letter-spacing:.005em;
+    min-height:100vh;
+  }
+  .wrap{max-width:var(--wrap);margin:0 auto;padding:0 24px}
+
+  .eyebrow{
+    font-family:var(--font-mono);
+    text-transform:uppercase;
+    letter-spacing:.18em;
+    font-size:.7rem;
+    color:var(--signal-strong);
+    font-weight:600;
+  }
+  a{color:inherit}
+  h1,h2,h3{margin:0;text-wrap:balance;letter-spacing:-.02em;font-weight:800;line-height:1.08}
+  p{margin:0}
+
+  /* ---- top bar ---- */
+  .bar{
+    position:sticky;top:0;z-index:20;
+    backdrop-filter:saturate(1.4) blur(10px);
+    background:color-mix(in srgb,var(--bg) 82%, transparent);
+    border-bottom:1px solid var(--line);
+  }
+  .bar-in{display:flex;align-items:center;gap:16px;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.01em;font-size:1.05rem}
+  .brand .glyph{
+    width:26px;height:26px;border-radius:7px;flex:none;
+    background:var(--signal);color:var(--signal-ink);
+    display:grid;place-items:center;font-family:var(--font-mono);font-weight:700;font-size:.9rem;
+    box-shadow:0 0 0 1px color-mix(in srgb,var(--signal) 60%,#000 40%) inset;
+  }
+  .bar-spacer{flex:1}
+  .icon-btn{
+    appearance:none;border:1px solid var(--line);background:var(--card);color:var(--ink);
+    width:40px;height:40px;border-radius:10px;cursor:pointer;font-size:1rem;
+    display:grid;place-items:center;transition:border-color .15s, transform .1s;
+  }
+  .icon-btn:hover{border-color:var(--steel)}
+  .icon-btn:active{transform:translateY(1px)}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    font-weight:650;font-size:.95rem;text-decoration:none;cursor:pointer;
+    padding:11px 18px;border-radius:11px;border:1px solid transparent;
+    transition:transform .1s, box-shadow .15s, background .15s, border-color .15s;
+  }
+  .btn-primary{background:var(--signal);color:var(--signal-ink);box-shadow:0 6px 18px -8px color-mix(in srgb,var(--signal) 70%, transparent)}
+  .btn-primary:hover{background:var(--signal-strong);transform:translateY(-1px)}
+  .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+  .btn-ghost:hover{border-color:var(--steel)}
+  .bar .btn{padding:9px 15px}
+  .bar .btn-ghost{display:none}
+  @media(min-width:620px){.bar .btn-ghost{display:inline-flex}}
+
+  :focus-visible{outline:2px solid var(--signal);outline-offset:2px;border-radius:6px}
+
+  /* ---- hero ---- */
+  .hero{padding:56px 0 40px}
+  .hero-grid{display:grid;gap:40px;grid-template-columns:1fr}
+  @media(min-width:900px){.hero-grid{grid-template-columns:1.02fr .98fr;align-items:center;gap:48px}.hero{padding:76px 0 56px}}
+  .hero h1{font-size:clamp(2.25rem,5.6vw,3.85rem)}
+  .hero .lead{margin-top:20px;font-size:1.15rem;color:var(--ink-2);max-width:34ch}
+  .hero .cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+  .hero .fineprint{margin-top:16px;font-size:.9rem;color:var(--steel)}
+  .hero .fineprint b{color:var(--ink);font-weight:650}
+  .fade-in{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
+  .fade-in.d1{animation-delay:.06s}
+  .fade-in.d2{animation-delay:.12s}
+  .fade-in.d3{animation-delay:.18s}
+  @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+  /* ---- live panel ---- */
+  .panel{
+    background:var(--panel);border:1px solid var(--panel-line);border-radius:16px;
+    box-shadow:var(--shadow);overflow:hidden;font-family:var(--font-mono);
+  }
+  .panel-head{
+    display:flex;align-items:center;gap:10px;padding:12px 16px;
+    border-bottom:1px solid var(--panel-line);color:var(--panel-dim);font-size:.78rem;
+  }
+  .dot{width:10px;height:10px;border-radius:50%;flex:none}
+  .live{display:inline-flex;align-items:center;gap:7px;color:var(--success);font-size:.76rem;letter-spacing:.04em}
+  .pulse{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 0 0 color-mix(in srgb,var(--success) 70%,transparent);animation:pulse 1.8s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--success) 55%,transparent)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
+  .panel-clock{margin-left:auto;color:var(--panel-dim);font-variant-numeric:tabular-nums;font-size:.78rem}
+  .log{padding:10px 8px 14px;min-height:280px}
+  .log-row{
+    display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;
+    padding:9px 12px;border-radius:9px;color:var(--panel-ink);font-size:.86rem;line-height:1.35;
+    opacity:0;transform:translateY(6px);
+  }
+  .log-row.show{opacity:1;transform:none;transition:opacity .3s ease, transform .3s ease}
+  .log-row .tag{color:var(--signal);font-size:.74rem}
+  .log-row .task{color:var(--panel-ink);min-width:0}
+  .log-row .task .muted{color:var(--panel-dim)}
+  .log-row .tick{
+    color:var(--success);font-weight:700;justify-self:end;
+    display:inline-flex;align-items:center;gap:6px;font-size:.8rem;
+  }
+  .log-row .tick .box{
+    width:16px;height:16px;border-radius:5px;display:grid;place-items:center;
+    background:color-mix(in srgb,var(--success) 20%, transparent);
+    color:var(--success);font-size:.72rem;
+  }
+
+  /* ---- sections ---- */
+  section{padding:64px 0}
+  .sec-head{max-width:38ch}
+  .sec-head h2{font-size:clamp(1.6rem,3.2vw,2.35rem);margin-top:12px}
+  .sec-head p{margin-top:14px;color:var(--steel);font-size:1.05rem}
+
+  /* pains */
+  .pains{background:var(--card);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .pain-grid{display:grid;gap:14px;margin-top:34px;grid-template-columns:1fr}
+  @media(min-width:640px){.pain-grid{grid-template-columns:1fr 1fr}}
+  .pain{
+    display:flex;gap:14px;align-items:flex-start;
+    padding:18px 20px;border:1px solid var(--line);border-radius:13px;background:var(--bg);
+  }
+  .pain .mk{
+    font-family:var(--font-mono);color:var(--signal-strong);flex:none;font-size:1.05rem;line-height:1.5;
+  }
+  .pain p{color:var(--ink-2);font-size:1rem}
+
+  /* services */
+  .cards{display:grid;gap:16px;margin-top:36px;grid-template-columns:1fr}
+  @media(min-width:640px){.cards{grid-template-columns:1fr 1fr}}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:15px;padding:24px;
+    display:flex;flex-direction:column;gap:10px;transition:transform .12s, border-color .15s, box-shadow .15s;
+  }
+  .card:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--signal) 45%, var(--line));box-shadow:var(--shadow)}
+  .card .k{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--steel)}
+  .card h3{font-size:1.22rem;letter-spacing:-.01em}
+  .card p{color:var(--ink-2);font-size:.98rem}
+  .card .win{
+    margin-top:auto;font-family:var(--font-mono);font-size:.8rem;color:var(--success);
+    display:inline-flex;align-items:center;gap:7px;padding-top:6px;
+  }
+
+  /* steps — a real sequence, so it's numbered */
+  .steps{display:grid;gap:0;margin-top:36px;grid-template-columns:1fr}
+  .step{
+    display:grid;grid-template-columns:auto 1fr;gap:20px;
+    padding:26px 0;border-top:1px solid var(--line);
+  }
+  .step:last-child{border-bottom:1px solid var(--line)}
+  .step .num{
+    font-family:var(--font-mono);font-weight:700;font-size:1rem;
+    width:44px;height:44px;flex:none;border-radius:11px;display:grid;place-items:center;
+    background:var(--signal-soft);color:var(--signal-strong);
+    border:1px solid color-mix(in srgb,var(--signal) 30%, transparent);
+  }
+  .step h3{font-size:1.18rem}
+  .step p{margin-top:6px;color:var(--ink-2)}
+  .step .when{font-family:var(--font-mono);font-size:.78rem;color:var(--steel);margin-top:8px;display:block}
+  @media(min-width:760px){.step{grid-template-columns:auto 1fr auto;align-items:center}.step .when{margin-top:0;text-align:right}}
+
+  /* why */
+  .why{background:var(--card);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .why-grid{display:grid;gap:14px;margin-top:34px;grid-template-columns:1fr}
+  @media(min-width:640px){.why-grid{grid-template-columns:1fr 1fr}}
+  .why-item{display:flex;gap:12px;align-items:flex-start}
+  .why-item .c{color:var(--signal);font-family:var(--font-mono);flex:none;font-weight:700}
+  .why-item b{font-weight:700}
+  .why-item span{color:var(--ink-2)}
+
+  /* final cta */
+  .final{padding:78px 0}
+  .cta-card{
+    background:var(--panel);color:var(--panel-ink);border-radius:20px;padding:clamp(28px,5vw,52px);
+    box-shadow:var(--shadow);position:relative;overflow:hidden;
+  }
+  .cta-card::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(120% 140% at 85% -10%, color-mix(in srgb,var(--signal) 26%, transparent), transparent 55%);
+  }
+  .cta-card .eyebrow{color:var(--signal)}
+  .cta-card h2{font-size:clamp(1.7rem,3.4vw,2.5rem);margin-top:12px;max-width:20ch;position:relative}
+  .cta-card p{color:var(--panel-dim);margin-top:14px;max-width:44ch;position:relative}
+  .cta-card .cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px;position:relative}
+  .cta-card .btn-ghost{color:var(--panel-ink);border-color:var(--panel-line)}
+  .cta-card .btn-ghost:hover{border-color:var(--panel-dim)}
+
+  /* footer */
+  footer{border-top:1px solid var(--line);padding:34px 0;color:var(--steel);font-size:.9rem}
+  .foot-in{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:center;justify-content:space-between}
+  .foot-brand{display:flex;align-items:center;gap:10px;color:var(--ink);font-weight:700}
+  .foot-links{display:flex;gap:20px;flex-wrap:wrap}
+  .foot-links a{color:var(--steel);text-decoration:none}
+  .foot-links a:hover{color:var(--ink)}
+  .ph{border-bottom:1px dashed color-mix(in srgb,var(--signal) 55%, var(--steel));padding-bottom:1px}
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+    .log-row{opacity:1;transform:none}
+  }
+</style>
+
+<div class="page">
+  <header class="bar">
+    <div class="wrap bar-in">
+      <div class="brand">
+        <span class="glyph">A</span>
+        <span><span class="ph" id="brand">АВТО·РУТ</span></span>
+      </div>
+      <div class="bar-spacer"></div>
+      <button class="icon-btn" id="theme" aria-label="Сменить тему" title="Сменить тему">◐</button>
+      <a class="btn btn-ghost" href="#контакт">Связаться</a>
+      <a class="btn btn-primary" href="https://t.me/username" id="tg-top">Telegram</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <span class="eyebrow fade-in">Автоматизация для бизнеса</span>
+          <h1 class="fade-in d1" style="margin-top:14px">Рутина вашего бизнеса&nbsp;— на&nbsp;автопилоте.</h1>
+          <p class="lead fade-in d2">Боты и автоматизация, которые записывают клиентов, отвечают на вопросы и напоминают о визитах&nbsp;— пока вы заняты делом.</p>
+          <div class="cta-row fade-in d3">
+            <a class="btn btn-primary" href="https://t.me/username" id="tg-hero">Обсудить вашу задачу →</a>
+            <a class="btn btn-ghost" href="#услуги">Что я делаю</a>
+          </div>
+          <p class="fineprint fade-in d3">Первый разбор&nbsp;— <b>бесплатно</b>. Покажете, что съедает время&nbsp;— скажу, что можно снять с вас.</p>
+        </div>
+
+        <!-- live automation panel -->
+        <div class="panel fade-in d2" aria-hidden="true">
+          <div class="panel-head">
+            <span class="dot" style="background:#ff5f57"></span>
+            <span class="dot" style="background:#febc2e"></span>
+            <span class="dot" style="background:#28c840"></span>
+            <span class="live"><span class="pulse"></span>система работает</span>
+            <span class="panel-clock" id="clock">00:00:00</span>
+          </div>
+          <div class="log" id="log"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAINS -->
+    <section class="pains">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow">Знакомо?</span>
+          <h2>Вы не растёте, потому что весь день тушите однотипную рутину.</h2>
+        </div>
+        <div class="pain-grid">
+          <div class="pain"><span class="mk">01</span><p>Отвечаете на одни и те же вопросы «сколько стоит?» и «вы работаете сегодня?» по сто раз в день.</p></div>
+          <div class="pain"><span class="mk">02</span><p>Клиент написал ночью&nbsp;— вы ответили утром. Он уже ушёл к тому, кто ответил сразу.</p></div>
+          <div class="pain"><span class="mk">03</span><p>Забыли напомнить о записи&nbsp;— клиент не пришёл. Пустое окно, минус деньги.</p></div>
+          <div class="pain"><span class="mk">04</span><p>Записи, заявки, оплаты&nbsp;— всё в переписках и в голове. Что-то обязательно теряется.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVICES -->
+    <section id="услуги">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow">Что я автоматизирую</span>
+          <h2>Забираю у вас скучное&nbsp;— и оно начинает работать само.</h2>
+          <p>Без сложных слов. Вы говорите на человеческом, «интеграции» и «вебхуки» остаются на моей стороне.</p>
+        </div>
+        <div class="cards">
+          <div class="card">
+            <span class="k">запись · напоминания</span>
+            <h3>Бот-администратор</h3>
+            <p>Сам записывает клиентов в удобное окно и напоминает им о визите за день и за час. Меньше пустых окон и неявок.</p>
+            <span class="win">✓ меньше неявок</span>
+          </div>
+          <div class="card">
+            <span class="k">ответы · 24/7</span>
+            <h3>Ответы без вас</h3>
+            <p>Цена, адрес, часы работы, «есть ли места» — бот отвечает мгновенно, даже ночью. Вы не теряете тех, кто написал первым.</p>
+            <span class="win">✓ отвечает за секунды</span>
+          </div>
+          <div class="card">
+            <span class="k">заявки · учёт</span>
+            <h3>Заявки в одном месте</h3>
+            <p>Обращения с сайта, Instagram и WhatsApp сами собираются в одну таблицу. Ничего не теряется в переписках.</p>
+            <span class="win">✓ ни одной потерянной</span>
+          </div>
+          <div class="card">
+            <span class="k">рутина · автоматом</span>
+            <h3>Повторяющиеся дела</h3>
+            <p>Отчёты, рассылки, запрос отзыва после визита, типовые сообщения — то, что вы делаете руками каждый день, идёт само.</p>
+            <span class="win">✓ минуты вместо часов</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW -->
+    <section class="pains" id="как">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow">Как мы работаем</span>
+          <h2>Три шага&nbsp;— и рутина больше не на вас.</h2>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <span class="num">01</span>
+            <div>
+              <h3>Разбираем</h3>
+              <p>20 минут созвона: показываете свой день, я нахожу, что съедает время и что можно снять с вас.</p>
+            </div>
+            <span class="when">≈ 20 минут · бесплатно</span>
+          </div>
+          <div class="step">
+            <span class="num">02</span>
+            <div>
+              <h3>Собираю решение</h3>
+              <p>Делаю автоматизацию под ваш процесс — так, как удобно вам и вашим клиентам. Цену называю заранее, без сюрпризов.</p>
+            </div>
+            <span class="when">обычно 2–5 дней</span>
+          </div>
+          <div class="step">
+            <span class="num">03</span>
+            <div>
+              <h3>Работает само</h3>
+              <p>Рутина идёт на автомате, вы занимаетесь бизнесом. Я на связи и поправлю, если что-то нужно докрутить.</p>
+            </div>
+            <span class="when">дальше — тишина в вашу пользу</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHY -->
+    <section class="why">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow">Почему со мной</span>
+          <h2>Делаю под ключ и на понятном языке.</h2>
+        </div>
+        <div class="why-grid">
+          <div class="why-item"><span class="c">→</span><span><b>Под ключ.</b> Настрою, подключу и проверю сам. Вам не нужно ни в чём разбираться.</span></div>
+          <div class="why-item"><span class="c">→</span><span><b>По-человечески.</b> Объясняю без технического жаргона. Вы всегда понимаете, за что платите.</span></div>
+          <div class="why-item"><span class="c">→</span><span><b>Фикс-цена.</b> Стоимость обсуждаем до начала. Никаких «оказалось сложнее».</span></div>
+          <div class="why-item"><span class="c">→</span><span><b>Быстро.</b> Первое рабочее решение — за считанные дни, а не месяцы.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="final" id="контакт">
+      <div class="wrap">
+        <div class="cta-card">
+          <span class="eyebrow">Первый разбор бесплатно</span>
+          <h2>Расскажите, что съедает ваше время.</h2>
+          <p>Напишите пару строк о своём деле — за 20 минут покажу, что из рутины можно снять с вас уже на этой неделе.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="https://t.me/username" id="tg-final">Написать в Telegram</a>
+            <a class="btn btn-ghost" href="tel:+70000000000" id="phone">+7 700 000 00 00</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot-in">
+      <div class="foot-brand"><span class="glyph" style="width:22px;height:22px;border-radius:6px;font-size:.8rem">A</span> <span class="ph">Ваше имя</span> · <span class="ph">Алматы</span></div>
+      <nav class="foot-links">
+        <a href="https://t.me/username" class="ph">@username</a>
+        <a href="tel:+70000000000" class="ph">+7 700 000 00 00</a>
+        <a href="mailto:hello@example.com" class="ph">hello@example.com</a>
+      </nav>
+    </div>
+  </footer>
+</div>
+
+<script>
+  // theme toggle — overrides the OS preference in both directions
+  (function(){
+    var root=document.documentElement;
+    var btn=document.getElementById('theme');
+    btn.addEventListener('click',function(){
+      var cur=root.getAttribute('data-theme');
+      if(!cur){ // no explicit theme yet — flip away from what the OS shows
+        cur=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+      }
+      root.setAttribute('data-theme',cur==='dark'?'light':'dark');
+    });
+  })();
+
+  // live clock
+  (function(){
+    var el=document.getElementById('clock');
+    function tick(){
+      var d=new Date();
+      var p=function(n){return String(n).padStart(2,'0')};
+      el.textContent=p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
+    }
+    tick();setInterval(tick,1000);
+  })();
+
+  // automation log — tasks completing by themselves, on a loop
+  (function(){
+    var log=document.getElementById('log');
+    var tasks=[
+      {tag:'[запись]',   task:'Новый клиент → записан на <span class="muted">15:00</span>'},
+      {tag:'[напомнил]', task:'Напоминание о визите отправлено'},
+      {tag:'[ответил]',  task:'«Сколько стоит?» → ответ за <span class="muted">2 сек</span>'},
+      {tag:'[заявка]',   task:'Заявка с сайта → в таблицу'},
+      {tag:'[отзыв]',    task:'Запрос отзыва после визита'},
+      {tag:'[рассылка]', task:'Акция → 214 клиентам'}
+    ];
+    var reduce=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+    function row(t){
+      var r=document.createElement('div');
+      r.className='log-row';
+      r.innerHTML='<span class="tag">'+t.tag+'</span>'+
+        '<span class="task">'+t.task+'</span>'+
+        '<span class="tick"><span class="box">✓</span>готово</span>';
+      return r;
+    }
+
+    if(reduce){
+      tasks.forEach(function(t){var r=row(t);r.classList.add('show');log.appendChild(r);});
+      return;
+    }
+
+    var i=0;
+    function step(){
+      if(i>=tasks.length){
+        setTimeout(function(){
+          // fade out and restart
+          var rows=log.children;
+          for(var k=0;k<rows.length;k++){rows[k].classList.remove('show');}
+          setTimeout(function(){log.innerHTML='';i=0;step();},400);
+        },2600);
+        return;
+      }
+      var r=row(tasks[i]);
+      log.appendChild(r);
+      requestAnimationFrame(function(){requestAnimationFrame(function(){r.classList.add('show');});});
+      i++;
+      setTimeout(step,780);
+    }
+    step();
+  })();
+</script>
+
+</body>
+</html>
